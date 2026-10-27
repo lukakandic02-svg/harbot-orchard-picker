@@ -1,0 +1,22 @@
+<launch>
+  <!-- Documentation/RViz layer only. It does not start move_base or alter control. -->
+  <arg name="map_file" default="$(find harbot_orchard_picker)/maps/orchard_static.yaml"/>
+  <arg name="orchard_map" default="$(env HOME)/harbot_calibration/orchard_map.json"/>
+  <arg name="show_rviz" default="true"/>
+  <arg name="publish_overlay" default="true"/>
+
+  <node pkg="map_server" type="map_server" name="orchard_static_map_server"
+        args="$(arg map_file)" output="screen"/>
+
+  <!-- Coordinates in map and Gazebo world are intentionally identical. -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_world"
+        args="0 0 0 0 0 0 map world"/>
+
+  <node if="$(arg publish_overlay)" pkg="harbot_orchard_picker"
+        type="orchard_map_visualizer.py" name="orchard_map_visualizer" output="screen">
+    <param name="orchard_map" value="$(arg orchard_map)"/>
+  </node>
+
+  <node if="$(arg show_rviz)" pkg="rviz" type="rviz" name="orchard_map_rviz"
+        args="-d $(find harbot_orchard_picker)/rviz/orchard_static_map.rviz" output="screen"/>
+</launch>

@@ -1,0 +1,13 @@
+target,loc,row,side
+T1,P0_I3,1,L
+T2,P0_I5,1,L
+T3,P1_I2,1,R
+T4,P1_I6,2,L
+T5,P2_I3,2,R
+T6,P2_I7,3,L
+T7,P3_I4,3,R
+T8,P3_I8,4,L
+T9,P4_I2,4,R
+T10,P4_I6,4,R
+T11,P1_I1,2,L
+T12,P3_I1,3,R

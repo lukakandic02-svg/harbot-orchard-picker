@@ -1,0 +1,97 @@
+domain orchard_targets {
+
+    requirements = {
+        reward-deterministic
+    };
+
+    types {
+        loc : object;
+        target : object;
+    };
+
+    pvariables {
+        at(loc) : { state-fluent, bool, default = false };
+        picked(target) : { state-fluent, bool, default = false };
+
+        adjacent(loc, loc) : { non-fluent, bool, default = false };
+        target_at(target, loc) : { non-fluent, bool, default = false };
+
+        move_to(loc) : { action-fluent, bool, default = false };
+        pick(target) : { action-fluent, bool, default = false };
+    };
+
+    cpfs {
+        at'(?to) =
+            exists_{?from : loc} [
+                at(?from) ^ move_to(?to) ^ adjacent(?from, ?to)
+            ]
+            |
+            (
+                at(?to)
+                ^
+                ~exists_{?l : loc} [ move_to(?l) ]
+            );
+
+        picked'(?t) =
+            picked(?t)
+            |
+            (
+                pick(?t)
+                ^
+                ~picked(?t)
+                ^
+                exists_{?l : loc} [
+                    at(?l) ^ target_at(?t, ?l)
+                ]
+            );
+    };
+
+    action-preconditions {
+        forall_{?to : loc} [
+            move_to(?to) =>
+                exists_{?from : loc} [
+                    at(?from) ^ adjacent(?from, ?to)
+                ]
+        ];
+
+        forall_{?t : target} [
+            pick(?t) =>
+                ~picked(?t)
+                ^
+                exists_{?l : loc} [
+                    at(?l) ^ target_at(?t, ?l)
+                ]
+        ];
+
+        forall_{?l1 : loc, ?l2 : loc} [
+            (move_to(?l1) ^ move_to(?l2)) => (?l1 == ?l2)
+        ];
+
+        forall_{?t1 : target, ?t2 : target} [
+            (pick(?t1) ^ pick(?t2)) => (?t1 == ?t2)
+        ];
+
+        forall_{?l : loc, ?t : target} [
+            ~(move_to(?l) ^ pick(?t))
+        ];
+
+        exists_{?t : target} [ ~picked(?t) ]
+        =>
+        (
+            exists_{?l : loc} [ move_to(?l) ]
+            |
+            exists_{?t : target} [ pick(?t) ]
+        );
+    };
+
+    reward =
+        1.0 * sum_{?t : target} [
+            if (picked(?t)) then 1 else 0
+        ]
+        -
+        0.03 * sum_{?l : loc} [
+            if (move_to(?l)) then 1 else 0
+        ]
+        -
+        0.01;
+}

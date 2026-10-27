@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# catkin
+build/
+devel/
+install/
+.catkin_tools/
+
+# experiment output (reports, rosbags and videos are far too large for git;
+# the per-mission summary lives in results/)
+test_logs/
+report_runs/
+*.bag
+*.mp4
