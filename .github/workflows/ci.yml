@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    name: Unit tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.10"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test tools
+        run: pip install -r requirements-dev.txt
+      - name: Lint (strict on the ROS-free core, errors-only on ROS nodes)
+        run: |
+          flake8 src tests tools
+          flake8 --select=E9,F63,F7,F82 scripts
+      - name: Run tests
+        run: pytest
+
+  catkin-build:
+    name: catkin build (ROS Noetic)
+    runs-on: ubuntu-22.04
+    container: ros:noetic-ros-base
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: catkin_ws/src/harbot_orchard_picker
+      - name: catkin_make
+        run: |
+          source /opt/ros/noetic/setup.bash
+          cd catkin_ws
+          catkin_make
+      - name: Package imports and every node compiles
+        run: |
+          source catkin_ws/devel/setup.bash
+          python3 -c "from harbot_orchard_picker import orchard_topology, fleet_arbiter, orchard_geometry; print('ok')"
+          python3 -m py_compile catkin_ws/src/harbot_orchard_picker/scripts/*.py
+          rospack find harbot_orchard_picker
